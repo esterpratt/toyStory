@@ -13,6 +13,6 @@ function addRoutes(app) {
     app.post('/review', (req, res) => {
         const review = req.body
         reviewService.add(review)
-            .then(review =>  res.json(review))
+            .then(review => res.json(review))
     })
 }
