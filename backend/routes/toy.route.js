@@ -1,8 +1,16 @@
 'use strict';
 
 const toyService = require('../services/toy.service')
-
+const reviewService = require('../services/review.service')
+// const session = require('express-session')
 module.exports = addRoutes;
+
+function requiredAuth(req, res, next) {
+    console.log(req.session);
+    const user = req.session.user;
+    if (user) return res.status(200).send('Not Allowed')
+    else next()
+}
 
 function addRoutes(app) {
     // get all toys
@@ -21,12 +29,18 @@ function addRoutes(app) {
     // get one toy
     app.get('/toy/:toyId', (req, res) => {
         const toyId = req.params.toyId;
-        toyService.getById(toyId)
-            .then(toy => res.json(toy));
+        Promise.all([
+            toyService.getById(toyId),
+            reviewService.query({toyId})
+        ])
+        .then(([toy, reviews]) => {
+            res.json({toy, reviews})
+        });
     })
 
+    // TODO: add middleware to delete, update and add
     // delete toy
-    app.delete('/toy/:toyId', (req, res) => {
+    app.delete('/toy/:toyId', requiredAuth, (req, res) => {
         const toyId = req.params.toyId;
         toyService.remove(toyId)
             .then(_ => res.end());
